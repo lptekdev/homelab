@@ -3,7 +3,7 @@ author: "Luís Ribeiro"
 description: "A blog about me exploring stuff..."
 permalink: /:title/
 lang: "en"
-excerpt_separator: "\n\n\n\n"
+excerpt_separator: "\n\n\n"
 date_format: "%B %d, %Y"
 
 # Layout
