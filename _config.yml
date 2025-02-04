@@ -1,4 +1,4 @@
-title: "LPTekDev Blog"
+title: "LPTekDev blog"
 author: "Luís Ribeiro"
 description: "A blog about me exploring stuff..."
 permalink: /:title/
@@ -31,3 +31,4 @@ comments:
 
 plugins:
  - jekyll-feed
+ - jekyll-remote-theme
