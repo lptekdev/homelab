@@ -32,4 +32,3 @@ comments:
 
 plugins:
  - jekyll-feed
- - jekyll-remote-theme
