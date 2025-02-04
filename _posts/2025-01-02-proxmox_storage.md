@@ -18,8 +18,8 @@ Of course we have the limitation of the 4094 VLANs (without the ones we already 
 
 A BGP connection is established between R1 and R2, allowing R3 to receive the Tenant address space: 10.0.0.0/16. This route will be identified by the its RD: AS:Tenant_ZONE_ID, allowing R3 tom import it to the correct VRF routing table. The route that is only advertised from R3, to R1 and R2 is the subnet that connects to the storage system.
 
-The Proxmox servers, despite being in the same subnet and the same AS of the R3, are not configured as BGP neighbors with R3. As we saw in part 1 of this setup, every Tenant has configured in R1 and R2:
-* a sub-interface that connects to the perimeter firewall to allow outside communication and
+The Proxmox servers, despite being in the same subnet and same AS of the R3, are not configured as BGP neighbors with R3. As we saw in part 1 of this setup, every Tenant has configured in R1 and R2:
+* a sub-interface that connects to the perimeter firewall to allow outside communication
 * default route through this firewall, which is announced to the Proxmox servers and injected in the Tenant VRF routing table
 
 This means that even without this BGP connection from R3 and the Proxmox servers, the workloads will be able to reach the storage through the next-hop defined by this route, which is R1 and R2 (since the default route includes the storage subnet). By the split horizon rule, the storage subnet route will never be advertised to the Proxmox servers, so we need to rely on the default route to guarantee there’s path to the storage. Also, without this BGP configuration it is not expected that R3 receives the type 5 and type 3 EVPN routes from Proxmox servers.
