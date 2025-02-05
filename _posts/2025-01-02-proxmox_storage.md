@@ -3,7 +3,7 @@ title:  "Proxmox Homelab - Part 2 - Adding storage as a service"
 layout: post
 ---
 
-Welcome to the second part of my Proxmox Homelab. In this post, we add a new service to the multitenancy infrastructure: external storage. At the end there is the configuration required for this setup.
+Welcome to the second part of my Proxmox Homelab. In this post, we add a new service to the multitenancy infrastructure: external storage. At the end there is the configuration required for this setup as a generic arquitecture picture.
 One of the services that is used by the Tenants is storage. Although VMs use block storage, sometimes it is required to have centralized storage that can be shared by multiple workloads. 
 <!--more-->
 
@@ -11,8 +11,9 @@ Two alternatives come up with this: use an external storage system that Tenants 
 
 I have decided to follow the first approach, setting up an external storage system. The easiest way to accomplish this is by routing the storage traffic through the Tenant firewall, but this can have a big impact on the workloads.
 The other way, which is not so easy, is routing the traffic through routers R1 and R2, and then to another router: R3, which acts as a bridge to the storage system. By using BGP, Tenant address space and storage subnet routes are exchanged between these routers.
+On the storage side, there will be a switch and a Truenas server, both with VLANs support. The R3 will have configured a sub-interface (called pseudo interface in vyos) that connects to Truenas sub-interface (in the same VLAN), using a /30 subnet (creating a point-to-point connection). Each Tenant will have a dedicated /30 subnet if they need to consume this service. This subnet is in the address space: 172.16.3.0-172.31.255.255, resulting in 261,952 subnets. The following picture shows generically this setup (for two different tenants):
 
-On the storage side, there will be a switch and a Truenas server, both with VLANs support. The R3 will have configured a sub-interface (called pseudo interface in vyos) that connects to Truenas sub-interface (in the same VLAN), using a /30 subnet (creating a point-to-point connection). Each Tenant will have a dedicated /30 subnet if they need to consume this service. This subnet is in the address space: 172.16.3.0-172.31.255.255, resulting in 261,952 subnets.
+![prxmox_storage_as_service](../assets/ProxmoxStorageAsaService.png)
 
 Of course we have the limitation of the 4094 VLANs (without the ones we already use for the management/control plane), but since every storage system is isolated in a switch and each Tenant has its own sub-interface in R3 (meaning that we may have another network interface with the same sub-interface VLAN ID), we can scale horizontally the switch and the Truenas system, increasing also the capacity of the service to more Tenants (within that previously mentioned address space capacity, and the routers interface throughput/processing power). Also, like in the Proxmox multitenancy setup, each Tenant will have its own VRF in R3.
 
