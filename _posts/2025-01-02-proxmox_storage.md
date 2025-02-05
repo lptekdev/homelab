@@ -36,7 +36,7 @@ ip rule add from 172.16.3.6 lookup vlan4_table
 ip route add 10.0.0.0/16 via 172.16.3.5 dev vlan4 table vlan4_table
 ```
 
-In "3 vlan3_table" is represented the priory and the routing table name. Is in this table that will be stored the routes. 
+In "3 vlan3_table" is represented the priority and the routing table name. Is in this table that will be stored the routes. 
 The next two commands allow to add the route to the Tenant address space:
 1. 172.16.3.2 – is the Truenas sub-interface IP dedicated for the Tenant
 2. 10.0.0.0/16 – is the Tenant address space
