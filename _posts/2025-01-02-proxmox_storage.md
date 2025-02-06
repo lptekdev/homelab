@@ -102,7 +102,6 @@ set protocols bgp neighbor 172.16.0.3 remote-as 64513
 set protocols bgp neighbor 172.16.0.3 address-family l2vpn-evpn
 set vrf name tenantA protocols bgp parameters router-id 172.16.0.1
 set vrf name tenantA protocols bgp address-family l2vpn-evpn rd '64513:5000'
-set vrf name tenantA protocols bgp address-family l2vpn-evpn route-target import '64513:5005'
 
 # R2 configuration, configure R3 as neighbor setting also the RD
 set protocols bgp neighbor 172.16.0.3 remote-as 64513
