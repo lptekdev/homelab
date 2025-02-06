@@ -47,10 +47,11 @@ As it’s possible to see we have two different subnets for two different Tenant
 Using NFS, one big issue (and very big) that was seen, was that a "showmount -e TENANT_IP_TRUENAS" command will show all the shares available in Truenas. This means all Tenants will be able to see all Tenants shares. However, by the source based routing and VRF isolation, they will only be able to access to its own shares.
 
 
-**Routers Configuration**
+**Routers Configuration for Tenant A**
+The zone configured for Tenant A in Proxmox has the ID: 5000. Several commands references this zone because also represents the VRF ID of the Tenant A.
 ```bash
 #R3
-# general settings and BGP neighbors R1 and R2
+# general settings and BGP neighbours R1 and R2
 set vrf name management
 set vrf name management table 100
 set interfaces ethernet eth0 vrf management
@@ -71,12 +72,13 @@ set protocols bgp neighbor 172.16.0.2 address-family l2vpn-evpn
 set protocols bgp neighbor 172.16.0.2 remote-as 64513
 set protocols bgp neighbor 172.16.0.2 update-source eth1
 
-#VRF TenantA
+#VRF TenantA, including the import for RT '64513:5000'
 set vrf name tenantA table 5000
 set vrf name tenantA vni 5000
 set vrf name tenantA protocols bgp system-as 64513
 set vrf name tenantA protocols bgp address-family ipv4-unicast redistribute connected
 set vrf name tenantA protocols bgp address-family l2vpn-evpn advertise ipv4 unicast
+set vrf name tenantA protocols bgp address-family l2vpn-evpn route-target import '64513:5000'
 
 # configure tenantA pseudo-interface to storage
 set interfaces pseudo-ethernet peth2 source-interface eth2
@@ -103,10 +105,10 @@ set protocols bgp neighbor 172.16.0.3 address-family l2vpn-evpn
 set vrf name tenantA protocols bgp parameters router-id 172.16.0.1
 set vrf name tenantA protocols bgp address-family l2vpn-evpn rd '64513:5000'
 
-# R2 configuration, configure R3 as neighbor setting also the RD
+# R2 configuration, configure R3 as neighbor setting also the RD for tenant A
 set protocols bgp neighbor 172.16.0.3 remote-as 64513
 set protocols bgp neighbor 172.16.0.3 address-family l2vpn-evpn
-set vrf name tenantA protocols bgp parameters router-id 172.16.0.1
+set vrf name tenantA protocols bgp parameters router-id 172.16.0.2
 set vrf name tenantA protocols bgp address-family l2vpn-evpn rd '64513:5000'
 
 ```
