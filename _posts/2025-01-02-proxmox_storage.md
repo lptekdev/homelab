@@ -15,6 +15,11 @@ On the storage side, there will be a switch and a Truenas server, both with VLAN
 
 ![proxmox_storage_as_service](../assets/ProxmoxStorageAsaService.png)
 
+
+The following picture tries to show the traffic flow from the tenant workload to the storage system:
+
+![tenant_traffic_workflow](../assets/TenantOverview_TrafficFlow-Storage.png)
+
 Of course we have the limitation of the 4094 VLANs, but since every storage system is isolated in a switch and each tenant has its own sub-interface in R3 (meaning that we may have another network interface with the same sub-interface VLAN ID), we can add more switches and Truenas systems to allow more tenants to use this service (within that previously mentioned address space capacity, and the routers interface throughput/processing power). Also, like in the Proxmox multitenancy setup, each Tenant will have its own VRF in R3, which will receive by BGP the route summary of the Tenant address space and will contain the sub-interface that connects to the storage system.
 
 A BGP connection is established between R1 and R2, allowing R3 to receive the Tenant address space: 10.0.0.0/16. This route will be identified by the its RD: AS:Tenant_ZONE_ID, allowing R3 tom import it to the correct VRF routing table. The route that is only advertised from R3, to R1 and R2 is the subnet that connects to the storage system.
