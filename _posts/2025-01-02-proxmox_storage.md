@@ -1,10 +1,10 @@
 ---
-title:  "Proxmox Homelab - Part 2 - Adding storage as a service"
+title:  "Proxmox Homelab - Part 2 - Adding storage as a service (and the NFS problem)"
 layout: post
 ---
 
 Welcome to the second part of my Proxmox Homelab. In this post, we add a new service to the multitenancy infrastructure: external storage. At the end there is the configuration required for this setup.
-One of the services that is used by the Tenants is storage. Although VMs use block storage, sometimes it is required to have centralized storage that can be shared by multiple workloads. 
+One of the services that is used by the Tenants is storage. Although VMs use block storage, sometimes it is required to have centralized storage that can be shared by multiple workloads. However a very big security issue was faced when deploying this setup, so this setup is not valid using Truenas.
 <!--more-->
 
 Two alternatives come up with this: use an external storage system that Tenants don’t need to manage, or virtualize a storage appliance within the Tenant environment, having Tenants full control of it (meaning also they need to handle the management).
@@ -51,6 +51,11 @@ The next two commands allow to add the route to the Tenant address space:
 As it’s possible to see we have two different subnets for two different Tenants.
 Using NFS, one big issue (and very big) that was seen, was that a "showmount -e TENANT_IP_TRUENAS" command will show all the shares available in Truenas. This means all Tenants will be able to see all Tenants shares. However, by the source based routing and VRF isolation, they will only be able to access to its own shares.
 
+**The NFS problem in this setup**
+
+As it was mentioned previously, any tenant using the *showmount* command can view all the Truenas configured NFS shares. But this is only one of the problems. The second problem is despites of being able to isolate each tenant traffic, **any tenant can actually mount any share from all other tenants** (breaking the entire soution).
+
+The next step on my side will be try to figure out (if actually exists) an alternative for Truenas that allows sharing a storage system without this (and others) security concerns.
 
 **Routers Configuration for Tenant A**
 
