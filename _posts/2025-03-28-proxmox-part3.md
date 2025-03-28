@@ -3,7 +3,7 @@ title:  "Proxmox Homelab - Part 3 - Exploring Ceph and Linux network namespaces"
 layout: post
 ---
 
-Welcome to the third part of my Proxmox Homelab. In this post I figured out a possible solution for the NFS problem described in: [Part2](./2025-01-02-proxmox_storage.md). The previous mentioned issue can be fixed by performing SNAT on the VyOS router (on the tenant interface that connects point-to-point to the Truenas storage) and limiting the access on the NFS shares to only this interface IP address. However, I approached this problem using a different technology: Ceph. 
+Welcome to the third part of my Proxmox Homelab. In this post I figured out a possible solution for the NFS problem described in: [Part2](./proxmox-part2). The previous mentioned issue can be fixed by performing SNAT on the VyOS router (on the tenant interface that connects point-to-point to the Truenas storage) and limiting the access on the NFS shares to only this interface IP address. However, I approached this problem using a different technology: Ceph. 
 <!--more-->
 
 Briefly under the hood, Ceph has several daemons/processes like:
@@ -20,7 +20,7 @@ The public network is a shared network and Ceph daemons bind to the first networ
 I concluded that without performing SNAT I cannot identify easily each Ceph client. With this I decided to dig a little deep into Linux network namespaces and try to perform SNAT on the Ceph host.
 The idea of using Linux network namespaces is to expose the Ceph public network in a different way, because within this namespace routing and NAT is also possible. The following image shows the architecture of this setup:
 
-![proxmox_storage_Ceph](../assets/storageAAService-Ceph.drawio.png)
+![proxmox_storage_Ceph](../assets/)
 
 In the Ceph host Linux namespace a bridge is created as also several virtual interfaces. These virtual interfaces will connect to the bridge and will have configured IP addresses on the subnet 192.168.100.0/24 (for now I just used a typical small subnet) that will be used to bind the MON, OSD and MDS daemons. 
 
