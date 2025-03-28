@@ -20,7 +20,7 @@ The public network is a shared network and Ceph daemons bind to the first networ
 I concluded that without performing SNAT I cannot identify easily each Ceph client. With this I decided to dig a little deep into Linux network namespaces and try to perform SNAT on the Ceph host.
 The idea of using Linux network namespaces is to expose the Ceph public network in a different way, because within this namespace routing and NAT is also possible. The following image shows the architecture of this setup:
 
-![proxmox_storage_Ceph](../assets/)
+![proxmox_storage_Ceph](../assets/storageAAService-CEPH.png)
 
 In the Ceph host Linux namespace a bridge is created as also several virtual interfaces. These virtual interfaces will connect to the bridge and will have configured IP addresses on the subnet 192.168.100.0/24 (for now I just used a typical small subnet) that will be used to bind the MON, OSD and MDS daemons. 
 
