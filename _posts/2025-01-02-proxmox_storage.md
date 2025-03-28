@@ -1,4 +1,5 @@
 ---
+permalink: /proxmox-part2
 title:  "Proxmox Homelab - Part 2 - Adding storage as a service (and the NFS problem)"
 layout: post
 ---
