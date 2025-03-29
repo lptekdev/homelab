@@ -15,7 +15,7 @@ If we check the Ceph architecture, Ceph uses a **public network** that should be
 
 This post describes my approach to allow tenants use Ceph FS (file storage services), but implementing Ceph is not straight forward in a multitenant environment. Ceph FS creates a MDS daemon responsible for handling some metadata commands that are made on the share by the clients.
 
-The public network is a shared network and Ceph daemons bind to the first network interface that as an IP belonging to the specified public network (at least from my experiments this was the behavior) that can be configured. But configuring for example the public network and public address to use the tenant /30 subnet creates a big issue because only the tenant that can access through this /30 subnet will be able to perform I/O on the storage. The OSD daemon should be exposed in a shared network, but since my setup includes duplicated address spaces, the problem in identifying uniquely each tenant still exists.
+The public network is a shared network and Ceph daemons bind to the first network interface that as an IP belonging to the configured public network (at least from my experiments this was the behavior). For better understanding this public network, for example configuring the public network for the OSD daemon to use the tenant /30 subnet (and with this achieve a tenant network isolation) creates a big issue because only the tenant that can access through this /30 subnet will be able to perform I/O on the storage. The problem here, since my setup includes duplicated address spaces, is in identifying uniquely each tenant that access to the OSD daemon to perform I/O operations.
 
 I concluded that without performing SNAT I cannot identify easily each Ceph client. With this I decided to dig a little deep into Linux network namespaces and try to perform SNAT on the Ceph host.
 The idea of using Linux network namespaces is to expose the Ceph public network in a different way, because within this namespace routing and NAT is also possible. The following image shows the architecture of this setup:
@@ -29,7 +29,7 @@ Each tenant will have its own Linux network namespace, containing two interfaces
 1.	a VLAN interface (associated with a physical NIC) configured with an IP address belonging to the tenant storage Proxmox VNET. With a bridge in the VyOS router I can extend this storage VNET to the Ceph host, allowing only that routing happens in the Proxmox nodes and Ceph. As a requirement, a dedicated VNET in Proxmox must be created.
 2.	A virtual interface configured with an IP on the Ceph public network (192.168.100.0/24) that will perform SNAT on the traffic coming from the tenant’s workloads. In this way I can identify uniquely each tenant and workload.
 
-To increase security, an IP tables rule is set by allowing only the access to the MDS daemon from the virtual interface on the tenant Linux network namespace. With this firewall rule even if the tenant credentials are leaked will not be possible to perform any operation (no even mount) the tenant share by any other tenants. As recommended, credentials rotation for the access to shares is always advisable (but not described in this post).
+To increase security, an IP tables rule is set by allowing only the access to the MDS daemon from the virtual interface on the tenant Linux network namespace. With this firewall rule even if the tenant credentials are leaked will not be possible to perform any operation (no even mount) the tenant share by any other tenants. Because, additionally, the public address of the MDS daemon is configured to be the one defined on the MDS virtual interface of the Ceph HOST Linux namespace. Also as recommended, credentials rotation for the access to shares is always advisable (but not described in this post).
 
 Additionally, a BGP process is instantiated in the tenant Linux network namespace to allow Ceph public network to be advertised to the Proxmox servers. The BGP neighbor is the IP address defined on the bridge that extends the Storage VNET. The pseudo interface on VyOS router was replaced by a "normal" VLAN interface (at the time I wrote the previous post (Proxmox Part 2), I understood wrongly that the pseudo interface and VLAN interface are the same) because pseudo interfaces have several limitations when compared to VLAN interfaces, like for example not being able to learn MAC addresses when "working inside" of bridges. Setting an IP address on the VyOS bridge is a requirement to allow this BGP connection to be established. 
 
@@ -171,11 +171,10 @@ cephadm bootstrap --mon-ip 192.168.100.2 --single-host-defaults --log-to-file --
 ## after Ceph installation, services started, dashboard available, CephFS share with name tenantA created, OSD pool created, client created:
 # set the osd network
 ceph config set osd public_network "192.168.100.0/24"
-
 # restart the osd dameons
 ceph orch restart osd.cost_capacity
 
-# set the network configuration for the tenantA MDS daemon
+# set the public network configuration for the tenantA MDS daemon to increase security to share access
 ceph config set mds.tenanta public_addr "192.168.100.3"
 ceph config set mds.tenanta public_network "192.168.100.0/24"
 ceph orch restart mds.tenanta
