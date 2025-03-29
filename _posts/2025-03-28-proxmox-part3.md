@@ -9,7 +9,7 @@ Welcome to the third part of my Proxmox Homelab. In this post I figured out a po
 Briefly under the hood, Ceph has several daemons/processes like:
 * MON -mainly used for client’s authentication
 * MDS - used as a metadata daemon for Ceph file
-* OSD - the daemon that is responsible for processing the data IO
+* OSD - the daemon that is responsible for processing the data I/O
 
 If we check the Ceph architecture, Ceph uses a **public network** that should be exposed to the clients to enable them accessing to storage services. For every daemon is possible to configure this parameter, as also another parameter: **public address**, which the address that the daemon will bind.
 
