@@ -31,42 +31,44 @@ Each tenant will have its own Linux network namespace, containing two interfaces
 
 To increase security, an IP tables rule is set by allowing only the access to the MDS daemon from the virtual interface on the tenant Linux network namespace. With this firewall rule even if the tenant credentials are leaked will not be possible to perform any operation (no even mount) the tenant share by any other tenants. As recommended, credentials rotation for the access to shares is always advisable (but not described in this post).
 
-Additionally, a BGP process is instantiated in the tenant Linux network namespace, to allow Ceph public network to be advertised to the Proxmox servers. The BGP neighbor is the IP address defined on the bridge that extends the Storage VNET. The pseudo interface on VyOS router was replaced by a "normal" VLAN interface (at the time I wrote the other post, I understood wrongly that the pseudo interface and VLAN interface are the same) because pseudo interfaces have several limitations when compared to VLAN interfaces, like for example not being able to learn MAC addresses when "working inside" of bridges. Setting an IP address on the VyOS bridge is a requirement to allow this BGP connection to be established. 
+Additionally, a BGP process is instantiated in the tenant Linux network namespace to allow Ceph public network to be advertised to the Proxmox servers. The BGP neighbor is the IP address defined on the bridge that extends the Storage VNET. The pseudo interface on VyOS router was replaced by a "normal" VLAN interface (at the time I wrote the previous post (Proxmox Part 2), I understood wrongly that the pseudo interface and VLAN interface are the same) because pseudo interfaces have several limitations when compared to VLAN interfaces, like for example not being able to learn MAC addresses when "working inside" of bridges. Setting an IP address on the VyOS bridge is a requirement to allow this BGP connection to be established. 
 
 **Note: This setup results in an additional load for processing this routing and the NAT translation.**
 
 Below the commands used to configure VyOS router and the Ceph node:
 **Ceph host**
+*For this setup I used a physical interface (enp6s19), setting this as access port with a VLAN on the switch*
+
 ```bash
 enable routing on the host
 sudo sysctl -w net.ipv4.ip_forward=1
 
-#HOST namespace bridge
+# HOST namespace bridge creation
 sudo ip link add name br0 type bridge
 sudo ip link set br0 up
 sudo ip addr add 192.168.100.1/24 dev br0
 
-#HOST namespace configuration for the ceph MON interface
+# HOST namespace configuration for the ceph MON interface
 sudo ip link add veth-mon type veth peer name veth-mon-br
 sudo ip addr add 192.168.100.2/24 dev veth-mon
 sudo ip link set veth-mon-br up
 sudo ip link set veth-mon up
 
-#HOST namespace configuration for the ceph tenantA MDS interface
+# HOST namespace configuration for the ceph tenantA MDS interface
 sudo ip link add veth-mds-a type veth peer name veth-mds-a-br  
 sudo ip addr add 192.168.100.3/24 dev veth-mds-a
 sudo ip link set veth-mds-a-br up
 sudo ip link set veth-mds-a up
 
-#Namespace tenantA
+# Create linux namespace tenantA
 sudo ip netns add tenantA
 
-#set physical interface ns tenantA
+# set physical interface ns tenantA
 sudo ip link set enp6s19 netns tenantA
 sudo ip netns exec tenantA ip addr add 10.0.3.3/24 dev enp6s19
 sudo ip netns exec tenantA ip link set enp6s19 up
 
-#set the tenantA ns virtual interface to connect to bridge
+# set the tenantA ns virtual interface to connect to bridge
 sudo ip link add veth1-ta type veth peer name veth1-ta-br
 sudo ip link set veth1-ta netns tenantA
 sudo ip netns exec tenantA ip addr add 192.168.100.4/24 dev veth1-ta
@@ -75,15 +77,15 @@ sudo ip link set veth1-ta-br master br0
 sudo ip link set veth1-ta-br up
 
 
-#add the tenantA address space to the tenantA namespace
-sudo ip netns exec tenantA ip route add 10.0.0.0/16 via 10.0.3.1 dev enp6s19
+# add the tenantA address space to the tenantA namespace
+sudo ip netns exec tenantA ip route add 10.0.0.0/16 via 10.0.3.1 dev enp6s19 
 sudo ip netns exec tenantA sysctl -w net.ipv4.ip_forward=1
 
 
-#Configure SNAT on interface veth1-ta of tenantA namespace
+# Configure SNAT on interface veth1-ta of tenantA namespace
 sudo ip netns exec tenantA iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -o veth1-ta -j SNAT --to-source 192.168.100.4
 
-#add the iptables rules
+# add the iptables rules
 iptables -A INPUT -s 192.168.100.4 -d 192.168.100.3 -j ACCEPT
 iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -d 192.168.100.3 -j DROP
@@ -91,7 +93,7 @@ iptables -A INPUT -d 192.168.100.3 -j DROP
 
 **VyOS Router R3**
 ```bash
-#deletes interfaces and removes the R1 and R2 neighbors
+# deletes interfaces and removes the R1 and R2 neighbors
 delete interfaces pseudo-ethernet peth2 vif 3 address 172.16.3.1/30
 delete interfaces pseudo-ethernet peth2 vif 3 vrf tenantA
 delete interfaces vxlan vxlan5000 parameters 
@@ -99,7 +101,7 @@ delete interfaces pseudo-ethernet peth2 vif 3
 delete protocols bgp neighbor 172.16.0.1
 delete protocols bgp neighbor 172.16.0.2
 
-#configure the Proxmox neighbors
+# configure the Proxmox servers as BGP neighbors
 set protocols bgp neighbor 172.16.0.10 address-family l2vpn-evpn
 set protocols bgp neighbor 172.16.0.10 remote-as 64513
 set protocols bgp neighbor 172.16.0.10 update-source eth1
@@ -117,7 +119,7 @@ set interfaces vxlan vxlan5007 vlan-to-vni 3 vni '5007'
 set interfaces ethernet eth2 vif 3 description StorageTenantA
 set interfaces bridge br5000 member interface eth2.3
 
-#ceph as BGP neighbor
+# configure Ceph as BGP neighbor
 set interfaces bridge br5000 address 10.0.3.2/24 #set an interface in the tenant Zone bridge
 set vrf name tenantA protocols bgp neighbor 10.0.3.3 remote-as 64515
 set vrf name tenantA protocols bgp neighbor 10.0.3.3 address-family ipv4-unicast
@@ -126,8 +128,7 @@ set vrf name tenantA protocols bgp neighbor 10.0.3.3 address-family ipv4-unicast
 **To configure BGP in the tenant namespace, the following commands are required:**
 ```bash
 sudo apt update && sudo apt install frr -y
-sudo systemctl stop frr
-sudo systemctl disable frr
+
 # In the frr main folder, in the "daemons" file, we need to change bgpd=no to bgpd=yes. This will allow the bgpd running in the every namespace
 mkdir /etc/frr/tenantA
 cd /etc/frr
@@ -167,19 +168,15 @@ apt install -y ceph-common
 
 cephadm bootstrap --mon-ip 192.168.100.2 --single-host-defaults --log-to-file --cluster-network "192.168.178.0/24"
 
-## after installation, services started, CephFS share created, OSD pool created, client created:
-#set the osd network
+## after Ceph installation, services started, dashboard available, CephFS share with name tenantA created, OSD pool created, client created:
+# set the osd network
 ceph config set osd public_network "192.168.100.0/24"
 
-#restart the osd dameons
+# restart the osd dameons
 ceph orch restart osd.cost_capacity
 
+# set the network configuration for the tenantA MDS daemon
 ceph config set mds.tenanta public_addr "192.168.100.3"
 ceph config set mds.tenanta public_network "192.168.100.0/24"
 ceph orch restart mds.tenanta
-
-
-ceph config set mds.tenantc public_addr "192.168.100.5"
-ceph config set mds.tenantc public_network "192.168.100.0/24"
-ceph orch restart mds.tenantc
 ```
