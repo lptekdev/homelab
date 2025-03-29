@@ -3,7 +3,7 @@ title:  "Proxmox Homelab - Part 3 - Exploring Ceph and Linux network namespaces"
 layout: post
 ---
 
-Welcome to the third part of my Proxmox Homelab. In this post I figured out a possible solution for the NFS problem described in: [Part2](../proxmox-part2) . The previous mentioned issue can be fixed by performing SNAT on the VyOS router (on the tenant interface that connects point-to-point to the Truenas storage) and limiting the access on the NFS shares to only this interface IP address. However, I approached this problem using a different technology: Ceph. 
+Welcome to the third part of my Proxmox Homelab. In this post I figured out a possible solution for the NFS problem described in: [Part2](/homelab/proxmox-part2) . The previous mentioned issue can be fixed by performing SNAT on the VyOS router (on the tenant interface that connects point-to-point to the Truenas storage) and limiting the access on the NFS shares to only this interface IP address. However, I approached this problem using a different technology: Ceph. 
 <!--more-->
 
 Briefly under the hood, Ceph has several daemons/processes like:
