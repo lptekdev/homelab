@@ -125,7 +125,7 @@ set vrf name tenantA protocols bgp neighbor 10.0.3.3 remote-as 64515
 set vrf name tenantA protocols bgp neighbor 10.0.3.3 address-family ipv4-unicast
 ```
 
-**To configure BGP in the tenant namespace wihtin the Ceph machine, the following commands are required:**
+**To configure BGP in the tenant namespace within the Ceph machine, the following commands are required:**
 ```bash
 sudo apt update && sudo apt install frr -y
 
