@@ -85,7 +85,7 @@ sudo ip netns exec tenantA sysctl -w net.ipv4.ip_forward=1
 # Configure SNAT on interface veth1-ta of tenantA namespace
 sudo ip netns exec tenantA iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -o veth1-ta -j SNAT --to-source 192.168.100.4
 
-# add the iptables rules
+# add the iptables rules in the Linux host namespace to block everything except the SNAT IP from the tenant namespace
 iptables -A INPUT -s 192.168.100.4 -d 192.168.100.3 -j ACCEPT
 iptables -A INPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A INPUT -d 192.168.100.3 -j DROP
