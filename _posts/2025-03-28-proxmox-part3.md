@@ -36,7 +36,8 @@ Additionally, a BGP process is instantiated in the tenant Linux network namespac
 **Note: This setup results in an additional load for processing this routing and the NAT translation.**
 
 Below are the commands used to configure VyOS router and the Ceph node.  
-*For this setup I used a physical interface (enp6s19), setting this as access port with a VLAN on the switch*  
+*For this setup I used a physical interface (enp6s19), setting this as access port with a VLAN on the switch*   
+**(Please be aware that the commands issued in the Linux namespaces are not persistent after reboot)**
 
 **Ceph host**
 ```bash
