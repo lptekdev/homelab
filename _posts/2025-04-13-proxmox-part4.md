@@ -41,7 +41,7 @@ sudo sysctl -w net.ipv4.ip_forward=1
 # HOST namespace bridge creation
 sudo ip link add name br0 type bridge
 sudo ip link set br0 up
-ip link set enp6s19 master br0
+sudo ip link set enp6s19 master br0
 sudo ip addr add 192.168.100.1/24 dev br0
 sudo ip addr add 192.168.101.1/29 dev br0
 
@@ -80,8 +80,8 @@ sudo ip netns exec tenantA sysctl -w net.ipv4.ip_forward=1
 # add the MDS /32 IPs routes to be advertised by BGP
 sudo ip netns exec tenantA ip route add 192.168.101.1/32 via 192.168.100.4 dev veth1-ta
 sudo ip netns exec tenantA ip route add 192.168.101.2/32 via 192.168.100.4 dev veth1-ta
-ip netns exec tenantA ip route add 192.168.100.1/32 via 192.168.100.4 dev veth1-ta
-ip netns exec tenantA ip route add 192.168.100.2/32 via 192.168.100.4 dev veth1-ta
+sudo ip netns exec tenantA ip route add 192.168.100.1/32 via 192.168.100.4 dev veth1-ta
+sudo ip netns exec tenantA ip route add 192.168.100.2/32 via 192.168.100.4 dev veth1-ta
 
 # Configure SNAT on interface veth1-ta of tenantA namespace
 sudo ip netns exec tenantA iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -o veth1-ta -j SNAT --to-source 192.168.100.4
@@ -96,7 +96,7 @@ sudo sysctl -w net.ipv4.ip_forward=1
 # HOST namespace bridge creation
 sudo ip link add name br0 type bridge
 sudo ip link set br0 up
-ip link set enp6s19 master br0
+sudo ip link set enp6s19 master br0
 sudo ip addr add 192.168.100.3/24 dev br0
 sudo ip addr add 192.168.101.3/29 dev br0
 
@@ -135,8 +135,8 @@ sudo ip netns exec tenantA sysctl -w net.ipv4.ip_forward=1
 # add the MDS /32 IPs routes to be advertised by BGP
 sudo ip netns exec tenantA ip route add 192.168.101.3/32 via 192.168.100.4 dev veth1-ta
 sudo ip netns exec tenantA ip route add 192.168.101.4/32 via 192.168.100.4 dev veth1-ta
-ip netns exec tenantA ip route add 192.168.100.3/32 via 192.168.100.4 dev veth1-ta
-ip netns exec tenantA ip route add 192.168.100.5/32 via 192.168.100.4 dev veth1-ta
+sudo ip netns exec tenantA ip route add 192.168.100.3/32 via 192.168.100.4 dev veth1-ta
+sudo ip netns exec tenantA ip route add 192.168.100.5/32 via 192.168.100.4 dev veth1-ta
 
 # Configure SNAT on interface veth1-ta of tenantA namespace
 sudo ip netns exec tenantA iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -o veth1-ta -j SNAT --to-source 192.168.100.4
@@ -151,7 +151,7 @@ sudo sysctl -w net.ipv4.ip_forward=1
 # HOST namespace bridge creation
 sudo ip link add name br0 type bridge
 sudo ip link set br0 up
-ip link set enp6s19 master br0
+sudo ip link set enp6s19 master br0
 sudo ip addr add 192.168.100.6/24 dev br0
 sudo ip addr add 192.168.101.5/29 dev br0
 
@@ -190,8 +190,8 @@ sudo ip netns exec tenantA sysctl -w net.ipv4.ip_forward=1
 # add the MDS /32 IPs routes to be advertised by BGP
 sudo ip netns exec tenantA ip route add 192.168.101.5/32 via 192.168.100.4 dev veth1-ta
 sudo ip netns exec tenantA ip route add 192.168.101.6/32 via 192.168.100.4 dev veth1-ta
-ip netns exec tenantA ip route add 192.168.100.6/32 via 192.168.100.4 dev veth1-ta
-ip netns exec tenantA ip route add 192.168.100.7/32 via 192.168.100.4 dev veth1-ta
+sudo ip netns exec tenantA ip route add 192.168.100.6/32 via 192.168.100.4 dev veth1-ta
+sudo ip netns exec tenantA ip route add 192.168.100.7/32 via 192.168.100.4 dev veth1-ta
 
 # Configure SNAT on interface veth1-ta of tenantA namespace
 sudo ip netns exec tenantA iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -o veth1-ta -j SNAT --to-source 192.168.100.4
@@ -279,9 +279,9 @@ router bgp 64515
 
 **Ceph01 installation (main node)**
 ```bash
-apt install -y cephadm
-apt install -y ceph-common
-cephadm bootstrap --mon-ip 192.168.100.2 --log-to-file --cluster-network "192.168.178.0/24" --ssh-user MACHINE_USER
+sudo apt install -y cephadm
+sudo apt install -y ceph-common
+sudo cephadm bootstrap --mon-ip 192.168.100.2 --log-to-file --cluster-network "192.168.178.0/24" --ssh-user MACHINE_USER
 
 # Copy the /etc/ceph/ceph.pub to all other nodes
 # Install docker engine in all the other nodes
@@ -290,13 +290,13 @@ cephadm bootstrap --mon-ip 192.168.100.2 --log-to-file --cluster-network "192.16
 
 # After creating the tenant Filesystem, issue the following commands:
 # The two below will set the correct MDS public network
-ceph config set mds.tenanta public_network "192.168.101.0/29"
-ceph orch restart mds.tenanta
+sudo ceph config set mds.tenanta public_network "192.168.101.0/29"
+sudo ceph orch restart mds.tenanta
 
 # Next two will set the OSD public network, and restart he OSD pool that was previously created
-ceph config set osd public_network "192.168.100.0/24"
-ceph orch restart osd.dashboard-admin-1743540453756 # the osd name could be different from setup to setup, adjust accordingly to yours
+sudo ceph config set osd public_network "192.168.100.0/24"
+sudo ceph orch restart osd.dashboard-admin-1743540453756 # the osd name could be different from setup to setup, adjust accordingly to yours
 
 # With the following command an additional standby MDS is created on the FS.
-ceph orch apply mds tenanta --placement=2
+sudo ceph orch apply mds tenanta --placement=2
 ```
