@@ -30,6 +30,7 @@ Going back to the MDS daemon, this process can be isolated from every tenant and
 The architecture doesn’t show the Ceph cluster network, but this is a different subnet with a dedicated physical interface. Also, is not shown another physical interface on the Host Linux namespace that belongs to each Ceph host bridge, but from the issued commands you can identify it easily.
 
 Below are the commands that I issued on the 3 Ceph hosts, the BGP configuration in each Ceph node and the router R3 and finally the commands to simply install Ceph and configure a CephFS to one tenant. Please be aware that for Ceph installation and configuration, several steps are missing (like creating the client and setting the permissions, creating the cluster, create the CephFS share).
+**The commands on post number 2 are also required for the complete setup**
 
 
 **Ceph01**
