@@ -21,10 +21,10 @@ Now that I was able to setup one Ceph host to provide CephFS to the tenant workl
 The architecture does not show many differences in the configuration for the Ceph nodes when compared with the architecture in post number 3, but those are important for the overall of the setup. After understanding a bit how Ceph can work in a multitenant environment (which does not come by design of Ceph), and after also understand that SNAT is the way to identify uniquely each workload, I also understood that MON and OSD daemons need to be hosted in a shared subnet (defined in public network) that needs to be accessed by all the tenants. However, the same does not applies to the MDS daemon. This means we can set a different subnet (defining its own public network), that can be different for every tenant (remember that MDS daemon is a process that allows run metadata commands on the CephFS like: cd, ls…). As all the other daemons, the MDS will bind to the first interface that is available on its defined public network.
 
 
-The idea of having a MDS subnet for each tenant is to create a network isolation among the tenants. By being different for each tenant, is not required to set IPtables rules because the tenants will not be able to reach the other tenant MDS, since the /32 IPs advertised by BGP only include the tenant /29 subnet IPs. With multiple IPs on the bridge of the Host Linux network namespace, is possible to route between the different networks of MON, OSD and the dedicated tenant MDS. Another /32 IPs that need also to be advertised by BGP are the IPs initially defined on the public network of MON and OSD daemons. These IPs need individually to be advertised because these processes (MON and OSD) bind also to an IP on the defined public network, and clients must reach directly them to authenticate and perform IO respectively.
+The idea of having a MDS subnet for each tenant is to create a network isolation among the tenants. By being different for each tenant, is not required to set **IPtables** rules because the tenants will not be able to reach the other tenant MDS, since the /32 IPs advertised by BGP only include the tenant /29 subnet IPs. With multiple IPs on the bridge of the Host Linux network namespace, is possible to route between the different networks of MON, OSD and the dedicated tenant MDS. Another /32 IPs that need also to be advertised by BGP are the IPs initially defined on the public network of MON and OSD daemons. These IPs need individually to be advertised because these processes (MON and OSD) bind also to an IP on the defined public network, and clients must reach directly them to authenticate and perform IO respectively.
 
 
-Going back to the MDS daemon, this process can be isolated from every tenant and using a /29 subnet we have 6 IPs available to handle MDS active and passive daemons, and to be set on the bridges to perform routing (in the list of commands for the Ceph installation there's one to create an additional MDS passive daemon). Also, another requirement, is the MDS active and passive daemons needs to communicate between each other and also between the MON, meaning different IPs needs to be configured on each Ceph host. The configuration to advertise the /32 IPs instead of the /29 network, is due the fact that Ceph has its own failover mechanism and the Ceph client will forward the requests to the correct MDS daemon in case of failure. This means that advertising the /29 subnet will create issues because with BGP is not possible to understand what MDS is active and what's its associated IP address. The same applies to the IPs on the MON and OSD public subnet.
+Going back to the MDS daemon, this process can be isolated from every tenant and using a /29 subnet we have 6 IPs available to handle MDS active and passive daemons, and to be set on the bridges to perform routing (in the list of commands for the Ceph installation there's one to create an additional MDS passive daemon). Also, another requirement, is the MDS active and passive daemons needs to communicate between each other and between the MON, meaning different IPs needs to be configured on each Ceph host. The configuration to advertise the /32 IPs instead of the /29 network, is due the fact that Ceph has its own failover mechanism and the Ceph client will forward the requests to the correct MDS daemon in case of failure. This means that advertising the /29 subnet will create issues because with BGP is not possible to understand what MDS is active and what's its associated IP address. The same applies to the IPs on the MON and OSD public subnet.
 
 
 The architecture doesn’t show the Ceph cluster network, but this is a different subnet with a dedicated physical interface. Also, is not shown another physical interface on the Host Linux namespace that belongs to each Ceph host bridge, but from the issued commands you can identify it easily.
@@ -197,7 +197,7 @@ ip netns exec tenantA ip route add 192.168.100.7/32 via 192.168.100.4 dev veth1-
 sudo ip netns exec tenantA iptables -t nat -A POSTROUTING -s 10.0.0.0/16 -o veth1-ta -j SNAT --to-source 192.168.100.4
 ```
 
-**R3 BGP configuration**
+**R3 BGP configuration, adding as neighbors the two additional Ceph nodes**
 ```bash
 set vrf name tenantA protocols bgp neighbor 10.0.3.4 remote-as 64515
 set vrf name tenantA protocols bgp neighbor 10.0.3.4 address-family ipv4-unicast
@@ -207,6 +207,17 @@ set vrf name tenantA protocols bgp neighbor 10.0.3.5 address-family ipv4-unicast
 ```
 
 **BGP configuration in each Ceph host (using FRR)**
+
+For the BGP setup on each Ceph host, is also possible to run FRR in each tenant Linux namespace. 
+1. Create a subfolder for each tenant in */etc/frr* location
+2. Copy the *frr.conf* and *daemons* files in */etc/frr* to the previous created subfolder
+3. Enable the BGP daemon in *daemons* file: *bgpd=yes*
+4. Copying the respective Ceph node frr configuration to *frr.conf*
+5. Run the below command to start a BGP instance on the tenant Linux namespace: 
+```bash 
+sudo ip netns exec tenantA /usr/lib/frr/frrinit.sh restart tenantA 
+```
+
 **Ceph01**
 ```bash
 log syslog informational
@@ -284,7 +295,7 @@ ceph orch restart mds.tenanta
 
 # Next two will set the OSD public network, and restart he OSD pool that was previously created
 ceph config set osd public_network "192.168.100.0/24"
-ceph orch restart osd.dashboard-admin-1743540453756
+ceph orch restart osd.dashboard-admin-1743540453756 # the osd name could be different from setup to setup, adjust accordingly to yours
 
 # With the following command an additional standby MDS is created on the FS.
 ceph orch apply mds tenanta --placement=2
