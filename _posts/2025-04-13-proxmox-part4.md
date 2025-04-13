@@ -3,13 +3,16 @@ title:  "Proxmox Homelab - Part 4 - Expanding Ceph capacity and improve its redu
 layout: post
 ---
 
-Welcome to the fourth post about my Proxmox homelab: Expanding Ceph capacity and increasing the redundancy of the storage service. If you didn’t read the 3 previous posts, below is a short summary about them for awareness: 
+Welcome to the fourth post about my *Proxmox homelab: Expanding Ceph capacity and increasing the redundancy of the storage service*. In the previous two posts, my goal was adding a storage service that can be consumed by the tenants. Didn’t work well using NFS but using Ceph I achieved my goal. Let’s see how I was able to improve the Ceph setup, at the same time maintaining a multi tenant architecture.
+<!--more-->
+
+If you didn’t read the 3 previous posts, below is a short summary about them for your awareness: 
 
 1. [Part1](/homelab/proxmox) - Enabling multitenancy – setup an environment that can host multiple tenants completely isolated and using duplicated address space.
 2. [Part2](/homelab/proxmox-part2) - Adding a NFS storage solution with Truenas – tenants might need to consume storage, and the idea was to provide it by NFS. However, I faced a high security concern caused by the "nature of NFS".
 3. [Part3](/homelab/proxmox-part3) - Solving the NFS problem using Ceph – implement a multitenant storage service solution using one Ceph node.  With the help of **Linux Namespaces** and customizing the ceph public network I managed to have one ceph node that provides CephFS, while I can isolate every workload uniquely.
 
-<!--more-->
+
 
 Now that I was able to setup one Ceph host to provide CephFS to the tenant workloads, is time to expand the capacity and increase redundancy of the Storage service. For this setup I used 3 machines as also Linux namespaces and bridges. The architecture of this setup is below:
 
