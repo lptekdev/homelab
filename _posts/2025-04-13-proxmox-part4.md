@@ -3,7 +3,7 @@ title:  "Proxmox Homelab - Part 4 - Improving Ceph setup redundancy"
 layout: post
 ---
 
-Welcome to the fourth post about my *Proxmox homelab: Improving Ceph setup redundancy* regarding the storage service. In the previous two posts, my goal was adding a storage service that can be consumed by the tenants. Didn’t work well using NFS with TrueNas, but using Ceph I achieved it. Let’s see how I was able to improve the redundancy of the Ceph setup, at the same time maintaining a multi tenant architecture.
+Welcome to the fourth post about my *Proxmox homelab: Improving Ceph setup redundancy* regarding the storage service. In the previous two posts, my goal was adding a storage service that can be consumed by the tenants. Didn’t work well using NFS with TrueNas, but using Ceph I achieved it. Let’s see how I was able to improve the redundancy of the Ceph setup, at the same time maintaining a multi-tenant architecture.
 <!--more-->
 
 If you didn’t read the 3 previous posts, below is a short summary about them for your awareness: 
