@@ -3,14 +3,13 @@ title:  "Proxmox and Packer - automate OpenSuse installation using ISO"
 layout: post
 ---
 
-During a meeting with a friend, we had a talk about snapshots (which went around VMware, ZFS, BTRFS, storage arrays snapshots…). At the end, OpenSuse came up, that by default uses BTRFS as filesystem when is installed. This means we can natively use snapshots, and of course this can be beneficial for any machine (VM or physical), from fast rollback until backup. In this first post I to digged a little bit in the installation of OpenSuse to check the BTRFS subvolumes creation for each important mountpoint and later investigated how the installation can be automated. For the next post, I will investigate how snapshots can be used for backups.
+In a meeting with friend of mine, where we discussed the snapshots technology in VMware, ZFS, BTRFS and storage arrays snapshots, the default installation of OpenSuse which uses BTRFS as filesystem and the relevant mounpoints separated per different BTRFS subvolumes was also a topic that came up and got my interest too. Since I mostly use Ubuntu and cloud-init, I decided then to create this post where I explore the installation of OpenSuse using its ISO and Packer. For another post, I will cover how snapshots in BTRFS can be used for backups.
 <!--more-->
 
-In my homelab I mostly use Ubuntu cloud images and cloud-init to apply to all VMs the same standard that I defined. My first step was manually install OpenSuse and later figuring out how to automate this. This path took me to Packer, which perhaps is more harder way for this goal. As equivalent to cloud-init, previous versions of OpenSuse use YaST for automation of the OS setup, but Leap (current OpenSuse version) uses Agama. Agama is the new Suse installer, and if you want to know more about it check this: [agama](https://agama-project.github.io/about)
+As already mentioned, in my homelab I mostly use Ubuntu cloud images and cloud-init to apply to all VMs the same standard that I defined when I need to create new VMs (the cloud images contains already the operating system installed). Following the same mindset, the automated installation for OpenSuse lead me to Packer. Packer is widely used for example to create VM golden images, which is an image with an installed operating system and in most of the cases with a compliant/aproved set of packages and security settings. This image is then used mostly for immutable VMs, where instead of updating the VMs, the VMs are entirely replaced by new ones with the updated software and packages.
 
-Packer is widely used for example to create VM golden images, which is an image with an operating system and a defined baseline in terms of software, packages and security. This image is then used mostly for immutable VMs, where instead of updating the VMs, the VMs are entirely replaced by new ones with the updated software and other baselines that were defined. 
-
-For be able to start a VM installation with Packer, we must first define which builder we need to use, which in my case is the “Proxmox ISO”. With this builder I can start the installation of a VM using an ISO, in Proxmox (for Proxmox, there's also a second builder that is used to clone a VM template). Then, using for example the "Ansible" provisioner, I can customize this installed OS. In my case, I will simply install OpenSuse and define a user for some day-2 operations. Packer allows inject keystrokes commands when the machine starts, simulating a human typing in the keyboard that navigates in the installation process. In my case, I will define the keystrokes that will point the boot to load a JSON file which will do the OS unattended installation (*sequence in boot_command*).
+To start this process we must first define which builder we need to use. The **builder** defines the platform where the VMs or images will be created. In this case I will use [Proxmox ISO](https://developer.hashicorp.com/packer/integrations/hashicorp/proxmox/latest/components/builder/iso), since I use Proxmox platform, allowing me to use an ISO to automate the installation of a VM. Then, using for example the [Ansible provisioner](https://developer.hashicorp.com/packer/integrations/hashicorp/ansible/latest/components/provisioner/ansible), I can customize this installed OS, like deploying some application and also hardening the system. In my case, I will simply install OpenSuse and define a user for day-2 operations. 
+Since packer allows inject keystrokes commands when the machine starts, simulating a human typing in the keyboard that navigates in the installation process, with some help of AI I defined this keystrokes that will point the boot to load a JSON file which will do the OS unattended installation (*sequence in boot_command*).
 
 
 ```hcl
@@ -34,7 +33,6 @@ source "proxmox-iso" "suse-agama" {
     "e",
     "<down><down><down><down><end>",
     "<spacebar>inst.auto=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst.json",
-#    " inst.cmdline=\"agama.profile=http://{{ .HTTPIP }}:{{ .HTTPPort }}/autoinst.json\"",
     "<spacebar>agama.debug=1",
     "<f10>"
     ]
@@ -48,7 +46,7 @@ source "proxmox-iso" "suse-agama" {
     
   }
   http_directory           = "config"
-  http_interface            = "Wi-Fi" # this will force the http server run with ip address of the Wi-fi, since packer binds to the first interface (in my case is a physical interface which has no IP, resulting in suse not able to get the autoinst.json file)
+  http_interface            = "Wi-Fi" # this will force the http server run with ip address of the Wi-fi, since packer binds to the first interface (in my case was a physical interface which has no IP, resulting in the installer not able to get the autoinst.json file)
   http_port_min = 8111
   http_port_max = 8111
   insecure_skip_tls_verify = true
@@ -81,8 +79,9 @@ build {
 }
 
 ```
-When Packer starts, for the Proxmox builder, if we define the http_directory property, a HTTP server is instantiated and can be used to serve the files for the unattended installation. Since the details about this HTTP server are unknown, Packer allows the use of the variables :{{ .HTTPIP }}:{{ .HTTPPort }} to point the boot to the correct HTTP server that has the JSON file that will start the unattended installation.
-The autoinst.json file is below, where some of the fields are blank due to security reasons. The scripts section is used to craete the 2-day operations user and add the allowed commands in its sudoers file. The storage section was kept as default, since it separates the important mountpoints by individual BTRFS subvolumes: 
+
+When Packer starts, for the Proxmox builder, if we define the *http_directory* property, a [HTTP server](https://developer.hashicorp.com/packer/integrations/hashicorp/proxmox/latest/components/builder/iso#http-directory-configuration) is instantiated and can be used to serve the files for the unattended installation. Since the deep details about this HTTP server are unknown, Packer allows the use of the variables :{{ .HTTPIP }}:{{ .HTTPPort }} to help pointing the boot to the correct HTTP server that hosts the JSON file that will start the unattended installation.
+The autoinst.json file is below, where some of the fields are blank due to security reasons. The scripts section is used to create the 2-day operations user and add the allowed commands in its sudoers file. The storage section was kept as default, since it separates the important mountpoints by individual BTRFS subvolumes:
 
 ```hcl
 {
@@ -159,9 +158,9 @@ The autoinst.json file is below, where some of the fields are blank due to secur
 }
 ```
 
-You may ask why I used a script file to add the sudoers file, and not the [Files](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#files-configuration-agama-installation-profile) module of Agama. The reason is because the scripts run after the Files, and adding the file to sudoers.d directory, results in error since the user is not yet created.
+You may ask why I used a script file to add the sudoers file, and not the [Files](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#files-configuration-agama-installation-profile) module of Agama. The reason is because the scripts run after the Files, and adding the file to sudoers.d directory, results in error due the user is not yet created.
 
-Files used for creating the user and sudoers file:
+Script files used for creating the user and sudoers file:
 **create_user.sh**
 ```bash
 #!/bin/bash
@@ -190,6 +189,6 @@ echo "ansible_automation ALL=(root) NOPASSWD: APT_CMDS, ALLOY_CMDS, MONITORING_R
 
 ```
 
-Important links:
+Another important links:
 - [Hashed password](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#root-authentication-agama-installation-profile)
 - [Script section](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#scripts-configuration-agama-installation-profile)
