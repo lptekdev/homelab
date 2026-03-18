@@ -83,7 +83,7 @@ build {
 When Packer starts, for the Proxmox builder, if we define the *http_directory* property, a [HTTP server](https://developer.hashicorp.com/packer/integrations/hashicorp/proxmox/latest/components/builder/iso#http-directory-configuration) is instantiated and can be used to serve the files for the unattended installation. Since the deep details about this HTTP server are unknown, Packer allows the use of the variables :{{ .HTTPIP }}:{{ .HTTPPort }} to help pointing the boot to the correct HTTP server that hosts the JSON file that will start the unattended installation.
 The autoinst.json file is below, where some of the fields are blank due to security reasons. The scripts section is used to create the 2-day operations user and add the allowed commands in its sudoers file. The storage section was kept as default, since it separates the important mountpoints by individual BTRFS subvolumes:
 
-```hcl
+```json
 {
     "product": {
         "id": "openSUSE_Leap"
