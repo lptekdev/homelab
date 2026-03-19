@@ -8,7 +8,7 @@ In a meeting with friend of mine, where we discussed the snapshots technology in
 
 As already mentioned, in my homelab I mostly use Ubuntu cloud images and cloud-init to apply to all VMs the same standard that I defined when I need to create new VMs (the cloud images contains already the operating system installed). Following the same mindset, the automated installation for OpenSuse lead me to Packer. Packer is widely used for example to create VM golden images, which is an image with an installed operating system and in most of the cases with a compliant/aproved set of packages and security settings. This image is then used mostly for immutable VMs, where instead of updating the VMs, the VMs are entirely replaced by new ones with the updated software and packages.
 
-To start this process we must first define which builder we need to use. The **builder** defines the platform where the VMs or images will be created. In this case I will use [Proxmox ISO](https://developer.hashicorp.com/packer/integrations/hashicorp/proxmox/latest/components/builder/iso), since I use Proxmox platform, allowing me to use an ISO to automate the installation of a VM. Then, using for example the [Ansible provisioner](https://developer.hashicorp.com/packer/integrations/hashicorp/ansible/latest/components/provisioner/ansible), I can customize this installed OS, like deploying some application and also hardening the system. In my case, I will simply install OpenSuse and define a user for day-2 operations. 
+To start this process we must first define which builder we need to use. The **builder** defines the platform where the VMs or images will be created. In this case I will use [Proxmox ISO](https://developer.hashicorp.com/packer/integrations/hashicorp/proxmox/latest/components/builder/iso), since I use Proxmox platform, allowing me to use an ISO to automate the installation of a VM. Then, using for example the [Ansible provisioner](https://developer.hashicorp.com/packer/integrations/hashicorp/ansible/latest/components/provisioner/ansible), I can customize this installed OS, like deploying some application and also hardening the system. In my case, I will simply install OpenSuse and define a user for day-2 operations. However, just for curiosity, I configured the [shell provisioner](https://developer.hashicorp.com/packer/docs/provisioners/shell) to just output the hostname of the deployed machine.
 Since packer allows inject keystrokes commands when the machine starts, simulating a human typing in the keyboard that navigates in the installation process, with some help of AI I defined this keystrokes that will point the boot to load a JSON file which will do the OS unattended installation (*sequence in boot_command*).
 
 
@@ -186,8 +186,16 @@ echo "Cmnd_Alias APT_CMDS = /usr/bin/zypper refresh,/usr/bin/zypper update" >> /
 echo "Cmnd_Alias ALLOY_CMDS = /usr/bin/tee /etc/alloy/config.alloy,/usr/bin/curl" >> /etc/sudoers.d/ansible_automation
 echo "Cmnd_Alias MONITORING_REPO_CLONE = /usr/bin/git" >> /etc/sudoers.d/ansible_automation
 echo "ansible_automation ALL=(root) NOPASSWD: APT_CMDS, ALLOY_CMDS, MONITORING_REPO_CLONE" >> /etc/sudoers.d/ansible_automation
-
 ```
+
+```bash
+#!/bin/bash
+
+zypper --non-interactive refresh
+zypper --non-interactive install podman
+zypper --non-interactive install alloy
+```
+
 
 Another important links:
 - [Hashed password](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#root-authentication-agama-installation-profile)
