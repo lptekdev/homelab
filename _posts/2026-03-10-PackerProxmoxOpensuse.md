@@ -158,7 +158,7 @@ The autoinst.json file is below, where some of the fields are blank due to secur
 }
 ```
 
-You may ask why I used a script file to add the sudoers file, and not the [Files](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#files-configuration-agama-installation-profile) module of Agama. The reason is because the scripts run after the Files, and adding the file to sudoers.d directory, results in error due the user is not yet created.
+You may ask why I used a script file to add the sudoers file, instead the [Files](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#files-configuration-agama-installation-profile) module of Agama. The reason is because the scripts run after the Files, and adding the file to sudoers.d directory using the native File module, results in error due the user is not yet created (since via Agama only one additional user can be created).
 
 Script files used for creating the user and sudoers file:
 **create_user.sh**
@@ -200,3 +200,4 @@ zypper --non-interactive install alloy
 Another important links:
 - [Hashed password](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#root-authentication-agama-installation-profile)
 - [Script section](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#scripts-configuration-agama-installation-profile)
+- [Agama RAW](https://raw.githubusercontent.com/agama-project/agama/refs/heads/SLE-16/rust/agama-lib/share/profile.schema.json)
