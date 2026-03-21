@@ -125,15 +125,6 @@ The autoinst.json file is below, where some of the fields are blank due to secur
             "tar"
         ]
     },
-    "questions": {
-        "policy": "auto",
-        "answers": [
-            {
-            "class": "software.import_gpg",
-            "answer": "Trust"
-            }
-        ]
-    },
     "network": {
         "connections": [
             {
