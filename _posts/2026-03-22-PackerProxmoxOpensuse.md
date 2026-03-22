@@ -154,12 +154,13 @@ The contents of *autoinst.json* file are below, where some of the fields are bla
 You may ask why I used a script file to add the sudoers file, instead the [Files](https://documentation.suse.com/sles/16.0/html/SLES-x86-64-agama-automated-installation/index.html#files-configuration-agama-installation-profile) module of Agama. The reason is because the Scripts run after the Files, and adding the file to sudoers.d directory using the native File module, results in error due the user is not yet created (since via Agama only one additional user can be created).
 
 Script files used for creating the user and sudoers file:
+
 **create_user.sh**
 ```bash
 #!/bin/bash
 
 USER=username
-KEY="ansible_automation"
+KEY="ansible_automation_public_key"
 
 useradd -m -s /bin/bash "$USER"
 
