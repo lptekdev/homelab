@@ -139,11 +139,11 @@ The contents of *autoinst.json* file are below, where some of the fields are bla
         "post": [
         {
             "name": "create_automation_user",
-            "url":"http://192.168.0.64:8111/create_user.sh"
+            "url":"http://PACKER_HTTP_SERVER_MACHINE_IP:8111/create_user.sh"
         },
         {
             "name": "create_sudoers_file",
-            "url":"http://192.168.0.64:8111/ansible_automation.sh",
+            "url":"http://PACKER_HTTP_SERVER_MACHINE_IP:8111/ansible_automation.sh",
             "chroot": true
         }
         ]
