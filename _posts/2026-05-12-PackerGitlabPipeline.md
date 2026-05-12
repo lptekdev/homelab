@@ -3,7 +3,7 @@ title:  "Using Packer and Gitlab pipeline to provision VMs in Proxmox"
 layout: post
 ---
 
-After the previous post about Packer and OpenSuse, I decided to change my process of creating VMs in my homelab. I use the CLI in the Proxmox server to clone a template that is cloud-init prepared (applying then a custom cloud-init file). Although is quite automated, still not enough. So, why not use Packer and a Gitlab pipeline? As you will see, this improvement also gave me a simple frontend to provision VMs simply with custom parameters like VM name, network and hostname..
+After the previous post about Packer and OpenSuse, I decided to change my process of creating VMs in my homelab. I use the CLI in the Proxmox server to clone a template that is cloud-init prepared (applying then a custom cloud-init file). Although is quite automated, still not enough. So, why not use Packer and a Gitlab pipeline? As you will see, this improvement also gave me a simple frontend to provision VMs simply with custom parameters like VM name, network and hostname.
 <!--more-->
 
 
