@@ -54,7 +54,7 @@ The last step of this, is adding the line in the file known_hosts in /home/user/
 ```bash
 @cert-authority * ssh-ed25519 AAAAC3...b SSH Host CA
 ```
-At bold is the public "part" of the hosts CA, and when accessing the VMs you will noticing there will be no warning message regarding unknown host keys.
+This is the public key of the hosts SSH CA, and when accessing the VMs you will noticing there will be no warning message regarding unknown host keys.
 
 You can access via SSH to the new VMs by:
 ```bash
