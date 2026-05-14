@@ -9,7 +9,7 @@ After the previous post about Packer and OpenSuse, I decided to change my proces
 
 As already mentioned, to create new VMs I use normally custom cloud-init files (user-data and network) and then issue CLI commands in 
 the Proxmox server to clone a template that is cloud-init prepared. This set a new VM with the required hostname, users, NTP 
-and network configuration, as also installs the required packages that define on my "standard baseline". 
+and network configuration, as also installs the required packages that I define on my "standard baseline". 
 
 
 But remember, from the previous post, that Packer can also be used to set this VM "standard baseline"? So, I created a Gitlab CI/CD pipeline that runs Packer to provision a new VM using the Proxmox clone module and customizing it. At the end, the Packer module converts this new VM to a template. The pipeline architecture is shown in the below picture:
@@ -27,7 +27,7 @@ Example of triggering manually a pipeline:
 
 ![Pipeline architecture](../assets/pipeline_run.png)
 
-So, what is the "users public SSH CA"? I decided also to follow a new way for the access to the VMs and the main goal was shifting from SSH keys to SSH certificates, including also checking the SSH host keys. With this way I don't need to copy any SSH public key for any VM, since the SSH certificates are used for authentication. I can make the expire date of the certificate short, and automate the generation of new one when an access to a machine is required.
+So, what is the "users public SSH CA"? I decided also to follow a new way for the access to the VMs and the main goal was shifting from SSH keys to SSH certificates, including also checking the SSH host keys. With this way I don't need to copy any SSH public key to any VM, since the SSH certificates are used for authentication. I can make the expire date of the certificate short, and automate the generation of new one when an access to a machine is required.
 Check the link for more details about [SSH Certificates](https://goteleport.com/blog/how-to-configure-ssh-certificate-based-authentication/).
 
 The following commands show you how to create the "users and hosts CA" and a user SSH certificate:
@@ -61,4 +61,4 @@ You can access via SSH to the new VMs by:
 ssh -v -i user_private_key -o CertificateFile=user_cert.pub username@fqnd_of_the_server
 ```
 
-I finish this post with the Git repository link with the all the files: [Gitlab pipeline for Proxmox](https://github.com/lptekdev/gitlab-proxmox-packer)
+You can find all the pipeline files in the repository: [Gitlab pipeline for Proxmox](https://github.com/lptekdev/gitlab-proxmox-packer)
