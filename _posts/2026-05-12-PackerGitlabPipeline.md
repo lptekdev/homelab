@@ -27,7 +27,8 @@ Example of triggering manually a pipeline:
 
 ![Pipeline architecture](../assets/pipeline_run.png)
 
-So, what is the "users public SSH CA"? I decided also to follow a new way for the access to the VMs and the main goal was shifting from SSH keys to SSH certificates, including also checking the SSH host keys. With this way I don't need to copy any SSH public key for any VM, since the SSH certificates are used for authentication. More details: [SSH Certificates](https://goteleport.com/blog/how-to-configure-ssh-certificate-based-authentication/)
+So, what is the "users public SSH CA"? I decided also to follow a new way for the access to the VMs and the main goal was shifting from SSH keys to SSH certificates, including also checking the SSH host keys. With this way I don't need to copy any SSH public key for any VM, since the SSH certificates are used for authentication. I can make the expire date of the certificate short, and automate the generation of new one when an access to a machine is required.
+Check the link for more details about [SSH Certificates](https://goteleport.com/blog/how-to-configure-ssh-certificate-based-authentication/).
 
 The following commands show you how to create the "users and hosts CA" and a user SSH certificate:
 
@@ -39,14 +40,14 @@ ssh-keygen -t ed25519 -f ssh_host_ca -C "SSH Host CA"
 #Creates the user key pair "username"
 ssh-keygen -t ed25519 -f username
 #Generates the certificate for the user
-ssh-keygen -s ssh_user_ca -I username_cert  -n username  -V +365d  username.pub
+ssh-keygen -s ssh_user_ca -I username_cert  -n username  -V +1d  username.pub
 ```
 
 A few notes about the arguments of the previous command:
 ```bash
 -s ssh_user_ca # the user CA  private key (its value is in a variable in CI/CD)
 -n username # principal (user allowed in the system). Be aware this user is a local user in the VM, and must be present
--V +365d # expire date of the certificate
+-V +1d # expire date of the certificate
 ```
 
 The last step of this, is adding the line in the file known_hosts in /home/user/.ssh/ dir, on the client machine:
@@ -57,7 +58,7 @@ At bold is the public "part" of the hosts CA, and when accessing the VMs you wil
 
 You can access via SSH to the new VMs by:
 ```bash
-ssh -v -i user_private_key   -o CertificateFile=user_cert.pub     username@fqnd_of_the_server
+ssh -v -i user_private_key -o CertificateFile=user_cert.pub username@fqnd_of_the_server
 ```
 
 I finish this post with the Git repository link with the all the files: [Gitlab pipeline for Proxmox](https://github.com/lptekdev/gitlab-proxmox-packer)
