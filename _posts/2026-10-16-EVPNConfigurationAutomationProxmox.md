@@ -9,8 +9,8 @@ In one of my previous post, I have an example of how can I have a multitenant se
 
 As you may know, Proxmox offers a SDN solution based in VXLAN and EVPN as control plane, but alike NSX with its edge routers for north-south traffic, to have the similar setup, an external router can be used for the same purpose. As the external router I will use VyOS, but to automate the entire process and allow this router to be customized at the startup with the cloud-init, is required to build the image and include the cloud-init package (I also included the qemu-guest-agent). The generic architecture is below:
 
-<img src="../assets/EVPN_automation.png" width="40%">
 
+![EVPN setup](../assets/EVPN_automation.png)
 As you see in the previous image, there's dedicated VTEP subnet and IPs on it configured in Proxmox hosts and VyOS router (in my case is VLAN 50).
 
 To make this setup simple, the VyOS router will have 3 network interfaces:
