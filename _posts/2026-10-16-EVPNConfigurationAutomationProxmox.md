@@ -50,9 +50,9 @@ The last part is run the ansible playbooks to finish the configuration of the Vy
 Run the commands in the following sequence:
 ```
 1. ansible-playbook -i inventory.ini -e ansible_user=vyos -e ansible_password=PASSWORD router-tenantA-add-management-vrf.yaml
-2. ansible-playbook -i inventory.ini -e ansible_user=vyos -e ansible_password= PASSWORD router-tenantA-add-commands.yaml
+2. ansible-playbook -i inventory.ini -e ansible_user=vyos -e ansible_password=PASSWORD router-tenantA-add-commands.yaml
 ``` 
 
-As already shared, you can find all code [here](https://github.com/lptekdev/Automate-EVPN-set-in-Proxmox-and-with-VyOS), and the *ansible_username* and *ansible_password`* are the VyOS router credentials that you define when you install the VyOS template. By default the username is *vyos*, and in the installation is prompted for the password.
+As already shared, you can find all code [here](https://github.com/lptekdev/Automate-EVPN-set-in-Proxmox-and-with-VyOS), and the *ansible_username* and *ansible_password* are the VyOS router credentials that you define when you install the VyOS template. By default the username is *vyos*, and in the installation is prompted for the password.
 
 
